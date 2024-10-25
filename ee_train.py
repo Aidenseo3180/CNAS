@@ -84,6 +84,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # write down all the arguments to the log.txt file
+    logging.info(args)
+
+    # TODO:  args.model_path = 'results/search_path/iter_0/net_18/net_18.subnet'
+    # TODO: set args.output_path to your own directory (ex. args.output_path = 'results/search_path/iter_0/net_18')
+
     log_format = '%(asctime)s %(message)s'
     logging.basicConfig(stream=sys.stdout, level=logging.INFO,
                         format=log_format, datefmt='%m/%d %I:%M:%S %p')
@@ -213,7 +219,7 @@ if __name__ == "__main__":
 
     # NOTE: args.model_path = results/search_path/iter_0/net_0/net_0.subnet. This changes for each subnet #
 
-    print("--------size of backbone----------\n")
+    print("--------size of backbone----------")
     param_size = 0
     buffer_size = 0
     for param in backbone.parameters():
@@ -224,7 +230,13 @@ if __name__ == "__main__":
 
     size_all_mb = (param_size + buffer_size) / 1024**2
     print('Size: {:.3f} MB'.format(size_all_mb))
-    print("----------------------\n")
+    logging.info('Model Size: {:.3f} MB'.format(size_all_mb))
+    print("------------------------------\n")
+
+    # NOTE: ONNX gets created here
+    # torch_input = torch.randn(1, 3, res, res).to(device) # device = cuda:{}. It has to run on GPU & 4D
+    # torch.onnx.export(backbone, torch_input, 'multi_exits_cifar10.onnx', opset_version=11)  # create onnx file
+    # print("onnx created!!!")
 
     # MODEL COST PROFILING
 
@@ -392,10 +404,6 @@ if __name__ == "__main__":
                                             )[0]
 
             backbone_dict, classifiers_dict, support_conf, global_gate = res
-            print("backbone_dict:\n")
-            print(backbone_dict)
-            print("classifiers_dict:\n")
-            print(classifiers_dict)
             if support_conf is not None:
                 support_conf = torch.mean(support_conf, dim=0).tolist() # compute the average on the n_classes dimension
             #sigma=torch.nn.Sigmoid()(global_gate).tolist()
@@ -642,6 +650,8 @@ if __name__ == "__main__":
 
     #------------------------------
     # NOTE: create onnx from here!
+    # FIXME: TypeError: randn(): argument 'size' failed to unpack the object at pos 3 with error "type must be tuple of ints,but got tuple"
+    #       - After n_epochs = 5
     # **  Added to create the onnx file of subnet found
     # **  backbone = model
     #
@@ -650,8 +660,8 @@ if __name__ == "__main__":
     # print("onnx created!!!")
     #------------------------------
 
-    print("------------results-------------\n")
-    print(results)
+    logging.info("results: {}".format(results))
+    print("------------Ended-------------\n")
     
     with open(save_path, 'w') as handle:
             json.dump(results, handle)
