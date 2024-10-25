@@ -8,12 +8,13 @@ import numpy as np
 from EarlyExits.models.efficientnet import EEEfficientNet
 import torch
 import torch.nn as nn
+import onnx
 
 import sys
 sys.path.append(os.getcwd())
 
 from train_utils import get_data_loaders, get_optimizer, get_loss, get_lr_scheduler, initialize_seed, train, validate, load_checkpoint, Log
-from utils import get_network_search
+from utils import get_network_search # download CNAS for OFA supernet handling
 
 from EarlyExits.evaluators import sm_eval, binary_eval, standard_eval, ece_score
 from EarlyExits.trainer import binary_bernulli_trainer, joint_trainer
@@ -210,15 +211,23 @@ if __name__ == "__main__":
     else:
         backbone, classifiers, epsilon = get_ee_efficientnet(model=backbone, img_size=res, n_classes=n_classes, get_binaries=get_binaries)
 
-    #------------------------------
-    # Added to create the onnx file of subnet found
-    # backbone = model
-    torch_input = torch.randn(1, 3, res, res).to(device) # device = cuda:{}. It has to run on GPU & 4D
-    torch.onnx.export(backbone, torch_input, 'multi_exits_cifar10.onnx', opset_version=11)  # create onnx file
-    print("onnx created!!!")
-    #------------------------------
+    # NOTE: args.model_path = results/search_path/iter_0/net_0/net_0.subnet. This changes for each subnet #
+
+    print("--------size of backbone----------\n")
+    param_size = 0
+    buffer_size = 0
+    for param in backbone.parameters():
+        param_size += param.nelement() * param.element_size()
+
+    for buffer in backbone.buffers():
+        buffer_size += buffer.nelement() * buffer.element_size()
+
+    size_all_mb = (param_size + buffer_size) / 1024**2
+    print('Size: {:.3f} MB'.format(size_all_mb))
+    print("----------------------\n")
 
     # MODEL COST PROFILING
+
     input_size = (3, res, res)
     
     net = copy.deepcopy(backbone)
@@ -383,6 +392,10 @@ if __name__ == "__main__":
                                             )[0]
 
             backbone_dict, classifiers_dict, support_conf, global_gate = res
+            print("backbone_dict:\n")
+            print(backbone_dict)
+            print("classifiers_dict:\n")
+            print(classifiers_dict)
             if support_conf is not None:
                 support_conf = torch.mean(support_conf, dim=0).tolist() # compute the average on the n_classes dimension
             #sigma=torch.nn.Sigmoid()(global_gate).tolist()
@@ -598,13 +611,13 @@ if __name__ == "__main__":
                 if(epsilon[i]<=0.11):
                     i=i-1   
                     
-    #COMPUTE ECE SCORES FOR CALIBRATION EVALUATION
-    stats_ece = ece_score(model=backbone,predictors=classifiers, dataset_loader=val_loader)
-    ece_scores={}
-    for i,k in enumerate(stats_ece):
-        scores = stats_ece[i]
-        ece_scores[i]=scores[0]
-    results['ece_scores']=ece_scores
+        #COMPUTE ECE SCORES FOR CALIBRATION EVALUATION
+        stats_ece = ece_score(model=backbone,predictors=classifiers, dataset_loader=val_loader)
+        ece_scores={}
+        for i,k in enumerate(stats_ece):
+            scores = stats_ece[i]
+            ece_scores[i]=scores[0]
+        results['ece_scores']=ece_scores
     
     #print("Solution repaired: {}".format(repaired))
     results["exits_ratio"]=weights
@@ -626,6 +639,19 @@ if __name__ == "__main__":
     #log.info('Branches scores on exiting samples: {}'.format(best_scores))
     #log.info('Exit ratios: {}'.format(weights))
     #log.info('Average MACS: {:.2f}'.format(avg_macs))
+
+    #------------------------------
+    # NOTE: create onnx from here!
+    # **  Added to create the onnx file of subnet found
+    # **  backbone = model
+    #
+    # torch_input = torch.randn(1, 3, res, res).to(device) # device = cuda:{}. It has to run on GPU & 4D
+    # torch.onnx.export(backbone, torch_input, 'multi_exits_cifar10.onnx', opset_version=11)  # create onnx file
+    # print("onnx created!!!")
+    #------------------------------
+
+    print("------------results-------------\n")
+    print(results)
     
     with open(save_path, 'w') as handle:
             json.dump(results, handle)
