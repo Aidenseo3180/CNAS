@@ -86,6 +86,7 @@ if __name__ == "__main__":
 
     # write down all the arguments to the log.txt file
     logging.info(args)
+    print("current iteration: {}".format(args.model_path))
 
     # TODO:  args.model_path = 'results/search_path/iter_0/net_18/net_18.subnet'
     # TODO: set args.output_path to your own directory (ex. args.output_path = 'results/search_path/iter_0/net_18')
@@ -231,12 +232,9 @@ if __name__ == "__main__":
     size_all_mb = (param_size + buffer_size) / 1024**2
     print('Size: {:.3f} MB'.format(size_all_mb))
     logging.info('Model Size: {:.3f} MB'.format(size_all_mb))
-    print("------------------------------\n")
+    results[size_all_mb] = float("{:.2f}".format(size_all_mb))
 
-    # NOTE: ONNX gets created here
-    # torch_input = torch.randn(1, 3, res, res).to(device) # device = cuda:{}. It has to run on GPU & 4D
-    # torch.onnx.export(backbone, torch_input, 'multi_exits_cifar10.onnx', opset_version=11)  # create onnx file
-    # print("onnx created!!!")
+    print("---------------------------------\n")
 
     # MODEL COST PROFILING
 
@@ -660,7 +658,7 @@ if __name__ == "__main__":
     # print("onnx created!!!")
     #------------------------------
 
-    logging.info("results: {}".format(results))
+    logging.info("results: {}\n".format(results))
     print("------------Ended-------------\n")
     
     with open(save_path, 'w') as handle:
