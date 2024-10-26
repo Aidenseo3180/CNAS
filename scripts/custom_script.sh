@@ -9,11 +9,11 @@ python cnas.py --sec_obj tiny_ml \
               --search_space cbnmobilenetv3 --trainer_type multi_exits \
               --method bernulli --support_set --tune_epsilon\
               --val_split 0.1 \
-              --n_epochs 0 --warmup_ee_epochs 0 --ee_epochs 2 \
+              --n_epochs 0 --warmup_ee_epochs 0 --ee_epochs 0 \
               --w_alpha 1.0 --w_beta 1.0 --w_gamma 1.0 \
               --mmax 2.7 --top1min 0.65 \
               --lr 32 --ur 32 --rstep 4 \
-              --n_doe 10 
+              --n_doe 1
 
 # --iteration: number of times you want to run the entire thing
 #       - So if iteration = 2 & n_doe = 10 --> entire thing runs (iteration+1)*n_doe
@@ -25,5 +25,3 @@ python cnas.py --sec_obj tiny_ml \
 #       - this shows the graph --> shows you how accuracy goes up for each epoch
 #       - NOTE: "backbone.pth" file is generated within that net folder if n_epochs is given! -> so when you run it next time, it uses that .pth file instead to load all the weights
 #       - But with .pth, the size of onnx increases
-
-# Also, the more you train, the more stuffs get added to .stats folder -> resulting in increase in size
