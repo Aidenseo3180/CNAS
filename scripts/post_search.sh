@@ -4,9 +4,10 @@
 
 # NOTE: sec_obj throws an error, so exclude it for now. Later, this first_obj will be the model size
 
-first_obj=top1
+# if first_obj is size_all_mb, then it tries to find all the subnets with lowest model size
+first_obj=size_all_mb
 # sec_obj=c_params
-iter=20
+iter=10
 
 python post_search.py \
   --supernet_path ./NasSearchSpace/ofa/supernets/ofa_mbv3_d234_e346_k357_w1.0 \
