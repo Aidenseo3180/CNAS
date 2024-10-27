@@ -232,7 +232,7 @@ if __name__ == "__main__":
     size_all_mb = (param_size + buffer_size) / 1024**2
     print('Size: {:.3f} MB'.format(size_all_mb))
     logging.info('Model Size: {:.3f} MB'.format(size_all_mb))
-    results[size_all_mb] = float("{:.2f}".format(size_all_mb))
+    results['size_all_mb'] = float("{:.2f}".format(size_all_mb))
 
     print("---------------------------------\n")
 
