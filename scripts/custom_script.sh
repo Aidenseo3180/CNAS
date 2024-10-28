@@ -13,7 +13,7 @@ python cnas.py --sec_obj tiny_ml \
               --w_alpha 1.0 --w_beta 1.0 --w_gamma 1.0 \
               --mmax 2.7 --top1min 0.65 \
               --lr 32 --ur 32 --rstep 4 \
-              --n_doe 1
+              --n_doe 10
 
 # --iteration: number of times you want to run the entire thing
 #       - So if iteration = 2 & n_doe = 10 --> entire thing runs (iteration+1)*n_doe
